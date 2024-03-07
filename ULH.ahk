@@ -17,9 +17,9 @@ hotkey, %key_bunny_off%, bunny_off
 
 ;settings
 pixel_box	:=	5
-pixel_sens	:=	50
+pixel_sens	:=	5
 pixel_color	:=	0xFEFE40
-tap_time	:=	50
+tap_time	:=	20
 
 ;shoot boundary
 leftbound:= A_ScreenWidth/2-pixel_box
