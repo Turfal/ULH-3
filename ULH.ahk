@@ -1,79 +1,91 @@
-#NoEnv
-#persistent
-#MaxThreadsPerHotkey 2
-#KeyHistory 0
+; #NoEnv
+#SingleInstance force
+#Persistent
+boxSize := 3
+sensitivity := 50
+targetColor := 0xFEFE40
+clickDelay := 150
+holdKey := "SPACE"
+currentMode := "lightmode"
 
-;bindings
-key_stay_on	 := 	"XButton1"
-key_off	 := 	"XButton2"
-key_bunny_on 	 := 	"Left"
-key_bunny_off 	 := 	"RIGHT"
-shoot_key		:= "P"
+clickMode := false
+holdMode := false
 
-hotkey, %key_stay_on%, stayon
-hotkey, %key_off%, offloop
-hotkey, %key_bunny_on%, bunny_on
-hotkey, %key_bunny_off%, bunny_off
+clickModeHotkey := "Left"
+holdModeHotkey := "Right"
+turnOffHotkey := "Up"
+terminateHotkey := "Down"
 
-;settings
-pixel_box	:=	5
-pixel_sens	:=	5
-pixel_color	:=	0xFEFE40
-tap_time	:=	20
-brightness_tolerance := 200 ; Порог отклонения яркости (от 0 до 255)
+Hotkey, %clickModeHotkey%, ToggleClickMode
+Hotkey, %holdModeHotkey%, ToggleHoldMode
+Hotkey, %turnOffHotkey%, TurnOff
+Hotkey, %terminateHotkey%, Terminate
 
-;shoot boundary
-leftbound:= A_ScreenWidth/2-pixel_box
-rightbound:= A_ScreenWidth/2+pixel_box
-topbound:= A_ScreenHeight/2-(pixel_box*1.25)
-bottombound:= A_ScreenHeight/2+pixel_box
-
-; Функция для получения яркости цвета
-GetColorBrightness(color) {
-    red := (color >> 16) & 0xFF
-    green := (color >> 8) & 0xFF
-    blue := color & 0xFF
-    return Round((red * 0.299) + (green * 0.587) + (blue * 0.114))
+ToggleClickMode:
+clickMode := !clickMode
+if (clickMode) {
+    SetTimer, ClickLoop, 1
+} else {
+    SetTimer, ClickLoop, Off
 }
+return
 
-start:
-bunny_on:
-settimer, loop2, 100
+ToggleHoldMode:
+holdMode := !holdMode
+if (holdMode) {
+    SetTimer, HoldLoop, 1
+} else {
+    SetTimer, HoldLoop, Off
+}
 return
-bunny_off:
-settimer, loop2, off
+
+TurnOff:
+clickMode := false
+holdMode := false
+SetTimer, ClickLoop, Off
+SetTimer, HoldLoop, Off
 return
-stayon:
-settimer, loop1, 100
-return
-offloop:
-settimer, loop1, off
-return
-loop1:
+
+Terminate:
+SoundBeep, 300, 200
+SoundBeep, 200, 200
+Sleep 400
+ExitApp
+
+ClickLoop:
 PixelSearch()
+if (!(ErrorLevel)) {
+    if (!GetKeyState("LButton")) {
+        Click, %FoundX%, %FoundY%
+        Sleep, %clickDelay%
+    }
+}
 return
 
-loop2:
-GetKeyState,state,space,P
-If state != U
-Send,{space}
-Sleep,10
+HoldLoop:
+if GetKeyState(holdKey, "P") {
+    PixelSearch()
+    if (!(ErrorLevel)) {
+        if (!GetKeyState("LButton")) {
+            Click, %FoundX%, %FoundY%
+            Sleep, %clickDelay%
+        }
+    }
+}
 return
 
 PixelSearch() {
-    global
-    PixelSearch, FoundX, FoundY, leftbound, topbound, rightbound, bottombound, pixel_color, pixel_sens, Fast RGB
+    global boxSize, sensitivity, targetColor, clickDelay
+    startX := A_ScreenWidth // 2 - boxSize
+    startY := A_ScreenHeight // 2 - boxSize
+    endX := A_ScreenWidth // 2 + boxSize
+    endY := A_ScreenHeight // 2 + boxSize
+    PixelSearch, FoundX, FoundY, startX, startY, endX, endY, targetColor, sensitivity, Fast RGB
     if (!(ErrorLevel)) {
-        PixelGetColor, current_color, FoundX, FoundY
-        target_brightness := GetColorBrightness(pixel_color)
-        current_brightness := GetColorBrightness(current_color)
-        if (Abs(target_brightness - current_brightness) <= brightness_tolerance) {
-            if (!GetKeyState("LButton")) {
-                Send, {%shoot_key%}
-                Sleep, %tap_time%
-            }
+        if (!GetKeyState("LButton")) {
+            Click, FoundX, FoundY
+            Sleep clickDelay
         }
     }
     return
 }
-Delete::ExitApp
