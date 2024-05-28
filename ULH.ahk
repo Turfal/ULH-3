@@ -4,7 +4,7 @@
 boxSize := 3
 sensitivity := 50
 targetColor := 0xFEFE40
-clickDelay := 10
+clickDelay := 120
 holdKey := "SPACE"
 currentMode := "lightmode"
 
